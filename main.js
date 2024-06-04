@@ -1,10 +1,11 @@
-import HelloWorldScene from "./scenes/HelloWorldScene.js";
+import Game from "./scenes/Game.js";
 
 // Create a new Phaser config object
 const config = {
   type: Phaser.AUTO,
   width: 800,
   height: 600,
+  pixelArt: true,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -20,14 +21,14 @@ const config = {
   physics: {
     default: "arcade",
     arcade: {
-      gravity: { y: 200 },
-      debug: true,
+      gravity: { y: 0 },
+      debug: false,
     },
   },
   // List of scenes to load
   // Only the first scene will be shown
   // Remember to import the scene before adding it to the list
-  scene: [HelloWorldScene],
+  scene: [Game],
 };
 
 // Create a new Phaser game instance
