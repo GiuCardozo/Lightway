@@ -25,6 +25,7 @@ export default class Game extends Phaser.Scene {
    this.load.image("enemigo1","./public/assets/Enemigo1.png");
    this.load.image("enemigo2","./public/assets/enemigo2_0001.png");
    this.load.image("enemigo3","./public/assets/enemigo3.png");
+   this.load.image("destroy","./public/assets/object.png");
   }
 
   create() {
@@ -118,6 +119,9 @@ export default class Game extends Phaser.Scene {
     this.personaje.setSize(20,20);
     this.personaje.setCollideWorldBounds(true); //Activar colision
 
+    const destroy= this.physics.add.image(400,300,"destroy").setScale(0.1).setImmovable(true).setVisible(false);
+    this.physics.add.collider(this.enemigos, destroy, this.destroyEnemy, null, this);
+
     this.physics.add.collider(this.personaje, this.jaula); //Agregar colision con la jaula
 
     this.m = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M); //agregar tecla M para activar MaxSpeed
@@ -136,21 +140,17 @@ export default class Game extends Phaser.Scene {
     const x = Phaser.Math.Between(0,800);
     const y = Phaser.Math.Between(0,600);
 
-    const pos = [[0,y], [800,y], [x,0], [x,600]];
+    const pos = [[0,y], [800,y], [x,0], [x,600]]; //Posiciones
 
-    const rndPos = Phaser.Math.RND.pick(pos);
+    const rndPos = Phaser.Math.RND.pick(pos); //Elegir aleatoriamente la posición
 
     const enemigo = this.enemigos.create(
       rndPos[0],
-      rndPos[1]
-
-    )
-    /*let enemigo = this.enemigos.create(
-      Phaser.Math.Between(0, 800), //Poner posiciones de aparicion
-      Phaser.Math.Between(0, 600),
-      0,
-      tipo 
-    );*/
+      rndPos[1],
+      tipo
+    ).setScale(1.5);
+    this.physics.moveTo(enemigo, 400, 300);
+    
   }
 
   handlerTimer(){
@@ -164,7 +164,45 @@ export default class Game extends Phaser.Scene {
   }
 
   update() {
-    let speed= 100;
+    if (this.inputKeys.left.isDown) {
+      this.personaje.setVelocityX(-100);
+      this.personaje.anims.play("izquierda", true);
+    } else if (this.inputKeys.right.isDown){
+      this.personaje.setVelocityX(100);
+      this.personaje.anims.play("derecha", true);
+    } else {
+      this.personaje.setVelocityX(0);
+    }
+
+    if(this.inputKeys.up.isDown) {
+      this.personaje.setVelocityY(-100);
+      this.personaje.anims.play("arriba", true);
+    } else if (this.inputKeys.down.isDown) {
+      this.personaje.setVelocityY(100);
+      this.personaje.anims.play("abajo", true);
+    } else {
+      this.personaje.setVelocityY(0);
+    }
+    
+    if(this.m.isDown && this.inputKeys.left.isDown) {
+      this.personaje.setVelocityX(-1000);
+    } else if(this.m.isDown && this.inputKeys.right.isDown) {
+      this.personaje.setVelocityX(1000);
+    }
+
+    if(this.m.isDown && this.inputKeys.up.isDown) {
+      this.personaje.setVelocityY(-1000);
+    } else if(this.m.isDown && this.inputKeys.down.isDown) {
+      this.personaje.setVelocityY(1000);
+    }
+    }
+
+    destroyEnemy(destroy, enemy) {
+      enemy.destroy();
+    }
+
+
+    /*let speed= 100;
     let personajeVelocidad= new Phaser.Math.Vector2();
    if(this.inputKeys.left.isDown) {
       personajeVelocidad.x= -1;
@@ -197,8 +235,5 @@ export default class Game extends Phaser.Scene {
     }
     }
 
+    } */
     }
-  //}
-
-
-//}
