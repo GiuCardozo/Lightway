@@ -9,6 +9,8 @@ export default class Game extends Phaser.Scene {
 
   init() {
     this.mDown = false; //maxspeed
+    this.timer = 0; //Contador tiempo
+    this.score= 0; //Contador de puntos
   }
 
   preload() {
@@ -20,6 +22,9 @@ export default class Game extends Phaser.Scene {
    this.load.image("platderecha","../public/assets/plataformalaterales.png"); 
    this.load.spritesheet("personaje","../public/assets/Isaac.png", {frameWidth: 32, frameHeight: 32}); //Personaje
    this.load.spritesheet("aura","../public/assets/PJaura.png", {frameWidth:32, frameHeight: 32}); //aura de max.speed
+   this.load.image("enemigo1","./public/assets/Enemigo1.png");
+   this.load.image("enemigo2","./public/assets/enemigo2_0001.png");
+   this.load.image("enemigo3","./public/assets/enemigo3.png");
   }
 
   create() {
@@ -68,6 +73,40 @@ export default class Game extends Phaser.Scene {
 
    this.fondo = this.add.image(400,300, "fondo");
 
+   this.time.addEvent({ //aparicion de proyectiles
+      delay:3000,
+      callback:this.onSecond,
+      callbackScope: this,
+      loop: true,
+   });
+
+   this.time.addEvent({ //evento contador de tiempo
+      delay:1000,
+      callback:this.handlerTimer,
+      callbackScope: this,
+      loop: true,
+   })
+
+   this.time.addEvent({ //evento contador de puntos
+    //delay:1000,
+    delay:100,
+    callback:this.scoreTimer,
+    callbackScope: this,
+    loop: true,
+ })
+ 
+   this.timerText= this.add.text(560,10, `Tiempo: ${this.timer}`, { //Texto de contador de tiempo
+    fontSize: "28px",
+    fill:"#ffffff",
+   })
+
+   this.scoreText= this.add.text(10,10, `Puntos: ${this.score}`, { //Texto de contador de tiempo
+    fontSize: "28px",
+    fill:"#ffffff",
+   })
+
+    this.enemigos = this.physics.add.group();
+
 
     this.jaula = this.physics.add.staticGroup() //Fisica estática a la jaula
     this.jaula.create(400,150,"platsuperior").setScale(10).setSize(400,700).setOffset(176,-200);
@@ -89,6 +128,39 @@ export default class Game extends Phaser.Scene {
       left: Phaser.Input.Keyboard.KeyCodes.A,
       right: Phaser.Input.Keyboard.KeyCodes.D,
     })
+  }
+
+  onSecond() {
+    const tipos = ["enemigo1","enemigo2","enemigo3"];
+    const tipo = Phaser.Math.RND.pick(tipos); //elegir aleatoriamente el tipo de enemigo
+    const x = Phaser.Math.Between(0,800);
+    const y = Phaser.Math.Between(0,600);
+
+    const pos = [[0,y], [800,y], [x,0], [x,600]];
+
+    const rndPos = Phaser.Math.RND.pick(pos);
+
+    const enemigo = this.enemigos.create(
+      rndPos[0],
+      rndPos[1]
+
+    )
+    /*let enemigo = this.enemigos.create(
+      Phaser.Math.Between(0, 800), //Poner posiciones de aparicion
+      Phaser.Math.Between(0, 600),
+      0,
+      tipo 
+    );*/
+  }
+
+  handlerTimer(){
+    this.timer += 1;
+    this.timerText.setText(`Tiempo: ${this.timer}`);
+  }
+
+  scoreTimer(){
+    this.score += 1;
+    this.scoreText.setText(`Puntos: ${this.score}`);
   }
 
   update() {
