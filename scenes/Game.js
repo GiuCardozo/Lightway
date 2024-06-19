@@ -11,6 +11,7 @@ export default class Game extends Phaser.Scene {
     this.mDown = false; //maxspeed
     this.timer = 0; //Contador tiempo
     this.score= 0; //Contador de puntos
+    this.healt= 3; 
   }
 
   preload() {
@@ -26,6 +27,9 @@ export default class Game extends Phaser.Scene {
    this.load.image("enemigo2","./public/assets/enemigo2_0001.png");
    this.load.image("enemigo3","./public/assets/enemigo3.png");
    this.load.image("destroy","./public/assets/object.png");
+   this.load.spritesheet("healt","./public/assets/Vidas.png", {frameWidth:32, frameHeight: 32}); //Vidas
+   this.load.spritesheet("alerta","./public/assets/Alerta.png", {frameWidth:32, frameHeight: 32}); //Alerta
+   this.load.spritesheet("enemigo4","./public/assets/enemigo4.png", {frameWidth:32, frameHeight: 32}); //Rayo gigante
   }
 
   create() {
@@ -72,10 +76,26 @@ export default class Game extends Phaser.Scene {
       repeat:-1
     })
 
+    this.anims.create({
+      //animacion alerta
+      key:"alert",
+      frames:this.anims.generateFrameNumbers("alerta", {start:0, end: 4}),
+      frameRate: 6,
+      repeat: 1
+    })
+
+    this.anims.create({
+      //animacion rayo laser
+      key:"laser",
+      frames: this.anims.generateFrameNumbers("enemigo4", {start:0, end: 8}),
+      frameRate: 10,
+      repeat: 0
+    })
+
    this.fondo = this.add.image(400,300, "fondo");
 
    this.time.addEvent({ //aparicion de proyectiles
-      delay:3000,
+      delay:500,
       callback:this.onSecond,
       callbackScope: this,
       loop: true,
@@ -95,6 +115,13 @@ export default class Game extends Phaser.Scene {
     callbackScope: this,
     loop: true,
  })
+
+  this.time.addEvent({ //evento aparicion de laser
+    delay: 10000,
+    callback:this.handlerLaser,
+    callbackScope: this,
+    loop: true,
+  })
  
    this.timerText= this.add.text(560,10, `Tiempo: ${this.timer}`, { //Texto de contador de tiempo
     fontSize: "28px",
@@ -108,6 +135,8 @@ export default class Game extends Phaser.Scene {
 
     this.enemigos = this.physics.add.group();
 
+    this.laseres= this.physics.add.group();
+
 
     this.jaula = this.physics.add.staticGroup() //Fisica estática a la jaula
     this.jaula.create(400,150,"platsuperior").setScale(10).setSize(400,700).setOffset(176,-200);
@@ -115,14 +144,39 @@ export default class Game extends Phaser.Scene {
     this.jaula.create(235,305,"platizquierda").setScale(10).setSize(900,400).setOffset(-300,165)
     this.jaula.create(565,305,"platderecha").setScale(10).setSize(900,400).setOffset(-600,-535); //Creacion de jaula y Hitbox ajustada
 
-    this.personaje = this.physics.add.sprite(400,300,"personaje").setScale(2);
+    this.personaje = this.physics.add.sprite(400,300,"personaje").setScale(1.5);
     this.personaje.setSize(20,20);
     this.personaje.setCollideWorldBounds(true); //Activar colision
 
-    const destroy= this.physics.add.image(400,300,"destroy").setScale(0.1).setImmovable(true).setVisible(false);
-    this.physics.add.collider(this.enemigos, destroy, this.destroyEnemy, null, this);
+    this.group = this.add.group({
+      key: "healt",
+      frame: 0,
+      repeat: 2
+    });
+
+    Phaser.Actions.GridAlign(this.group.getChildren(), { width: 10, cellWidth: 25, cellHeight: 48, x: 50, y: 60 }); //Children del grupo vidas
+
+
+    const destroy= this.physics.add.image(400,300,"destroy").setScale(0.1).setImmovable(true).setVisible(false).setSize(20,20); //crear el objeto centro que destruye a los enemigos
+    this.physics.add.collider(this.enemigos, destroy, this.destroyEnemy, null, this); //colision entre enemigos y el centro invisible
 
     this.physics.add.collider(this.personaje, this.jaula); //Agregar colision con la jaula
+
+   this.physics.add.collider(
+    this.personaje,
+    this.enemigos,
+    this.onImpact,
+    null,
+    this
+   );
+
+   this.physics.add.collider(
+    this.personaje,
+    this.laseres,
+    this.onLaser,
+    null,
+    this
+   );
 
     this.m = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M); //agregar tecla M para activar MaxSpeed
 
@@ -148,17 +202,17 @@ export default class Game extends Phaser.Scene {
       rndPos[0],
       rndPos[1],
       tipo
-    ).setScale(1.5);
-    this.physics.moveTo(enemigo, 400, 300);
+    ).setScale(1.5).setSize(15,13);
+    this.physics.moveTo(enemigo, this.personaje.x, this.personaje.y, 150); //Hacer que el enemigo siga la posicion del personaje al iniciarse
     
   }
 
-  handlerTimer(){
+  handlerTimer(){ //contador de tiempo
     this.timer += 1;
     this.timerText.setText(`Tiempo: ${this.timer}`);
   }
 
-  scoreTimer(){
+  scoreTimer(){ //contador de puntos
     this.score += 1;
     this.scoreText.setText(`Puntos: ${this.score}`);
   }
@@ -195,45 +249,82 @@ export default class Game extends Phaser.Scene {
     } else if(this.m.isDown && this.inputKeys.down.isDown) {
       this.personaje.setVelocityY(1000);
     }
+    if(this.healt <= 0) { //Pausar la escena al recibir 3 golpes
+      this.scene.pause();
+    }
     }
 
     destroyEnemy(destroy, enemy) {
-      enemy.destroy();
+      enemy.destroy(); //El enemigo se destruye al tocar el centro
     }
 
+    onImpact(personaje, enemigo) { 
+      enemigo.destroy();  //El enemigo se destruye al tocar al jugador
+      this.healt -= 1;  //Se resta una vida cuando el jugador toca un enemigo
 
-    /*let speed= 100;
-    let personajeVelocidad= new Phaser.Math.Vector2();
-   if(this.inputKeys.left.isDown) {
-      personajeVelocidad.x= -1;
-      this.personaje.anims.play("izquierda", true);
+      const hp = this.group.getChildren(); //grupo de vidas
+      
+      const hearts = Phaser.Utils.Array.RemoveRandomElement(hp);
+
+          if (hearts)
+          {
+              hearts.destroy();
+          }
+
+          console.log(this.group.getChildren());
+
+    }
+
+    handlerLaser() {
+      const variantes= ["top", "bottom"];
+      const alertPosition = Phaser.Math.RND.pick(variantes); // Elige entre top y bottom para elegir la posicion de la alerta
+
+            // Determina las posiciones de la alerta y laser
+            let alertaX, alertaY, otraImagenX, otraImagenY;
+            if (alertPosition === 'top') {
+                alertaX = 600;
+                alertaY = 160;
+                otraImagenX = 400;
+                otraImagenY = 205;
+            } else if (alertPosition === 'bottom') {
+                alertaX = 480;
+                alertaY = 500;
+                otraImagenX = 400;
+                otraImagenY = 355;
+            }
+
+            // Muestra la imagen de alerta
+            const alerta = this.add.sprite(alertaX, alertaY, "alerta").setScale(1.5);
+            alerta.play({
+              key:"alert",
+              hideOnComplete: true
+            });
+
+            // Después de 3 segundos, oculta la imagen de alerta y muestra el laser
+            this.time.delayedCall(2000, function() {
+                alerta.setVisible(false); // Oculta la imagen de alerta
+                const laser= this.laseres.create(otraImagenX, otraImagenY, "enemigo4.png").setScale(10);
+                laser.play({
+                  key:"laser",
+                  hideOnComplete:true
+                }) // Muestra el laser
+            }, [], this);
+    }
+
+    onLaser(personaje, laser){
+      this.healt -= 1;
+      laser.destroy();
+
+      const hp = this.group.getChildren(); //grupo de vidas
+      
+      const hearts = Phaser.Utils.Array.RemoveRandomElement(hp);
+
+          if (hearts)
+          {
+              hearts.destroy();
+          }
+
+          console.log(this.group.getChildren());
+    }
     
-  }else if(this.inputKeys.right.isDown) {
-      personajeVelocidad.x= 1;
-      this.personaje.anims.play("derecha", true);
-  }
-  if(this.inputKeys.up.isDown) {
-    personajeVelocidad.y= -1;
-    this.personaje.anims.play("arriba", true);
-  }else if(this.inputKeys.down.isDown) {
-    personajeVelocidad.y= 1;
-    this.personaje.anims.play("abajo", true);
-  }
-  personajeVelocidad.scale(speed);
-  this.personaje.setVelocity(personajeVelocidad.x,personajeVelocidad.y);
-
-
-
-    if(this.m.isDown){
-      speed=100;
-      personajeVelocidad.scale(speed);
-      this.personaje.setVelocity(personajeVelocidad.x,personajeVelocidad.y); //multiplicador de velocidad
-      this.personaje.anims.play("aura", true);
-       // accion que se ejecuta al mantener presionada la tecla
-    } else {
-      this.maxSpeed= false; //acción que se ejecuta al soltar la tecla
-    }
-    }
-
-    } */
     }
