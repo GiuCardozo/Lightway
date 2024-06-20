@@ -12,6 +12,7 @@ export default class Game extends Phaser.Scene {
     this.timer = 0; //Contador tiempo
     this.score= 0; //Contador de puntos
     this.healt= 3; 
+    this.gameOver= false;
   }
 
   preload() {
@@ -88,7 +89,7 @@ export default class Game extends Phaser.Scene {
       //animacion rayo laser
       key:"laser",
       frames: this.anims.generateFrameNumbers("enemigo4", {start:0, end: 8}),
-      frameRate: 10,
+      frameRate: 16,
       repeat: 0
     })
 
@@ -250,7 +251,14 @@ export default class Game extends Phaser.Scene {
       this.personaje.setVelocityY(1000);
     }
     if(this.healt <= 0) { //Pausar la escena al recibir 3 golpes
-      this.scene.pause();
+      this.gameOver = true;
+    }
+
+    if(this.gameOver) {
+      this.scene.start("end", {
+        score: this.score,
+        gameOver: this.gameOver,
+      });
     }
     }
 
@@ -301,13 +309,24 @@ export default class Game extends Phaser.Scene {
             });
 
             // Después de 3 segundos, oculta la imagen de alerta y muestra el laser
-            this.time.delayedCall(2000, function() {
-                alerta.setVisible(false); // Oculta la imagen de alerta
-                const laser= this.laseres.create(otraImagenX, otraImagenY, "enemigo4.png").setScale(10);
-                laser.play({
-                  key:"laser",
-                  hideOnComplete:true
-                }) // Muestra el laser
+            this.time.delayedCall(2000, function () {
+              alerta.setVisible(false); // Oculta la imagen de alerta
+              const laser = this.laseres.create(otraImagenX, otraImagenY, "enemigo4").setScale(10);
+              laser.play({
+                key: "laser",
+                hideOnComplete: true
+              }); // Muestra el laser
+      
+              // Activar collider cuando la animación comienza
+              laser.on('animationstart', () => {
+                laser.body.enable = true;
+              });
+      
+              // Desactivar collider cuando la animación termina
+              laser.on('animationcomplete', () => {
+                laser.body.enable = false;
+                laser.destroy();
+              });
             }, [], this);
     }
 
