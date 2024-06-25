@@ -34,7 +34,7 @@ export default class Game extends Phaser.Scene {
    this.load.spritesheet("alerta","./public/assets/Alerta.png", {frameWidth:32, frameHeight: 32}); //Alerta
    this.load.spritesheet("enemigo4","./public/assets/enemigo4.png", {frameWidth:32, frameHeight: 32}); //Rayo gigante
    this.load.audio("hit","./public/audio/Hit.mp3");
-   this.load.audio("advice","/public/audio/Alerta-loop.mp3");
+   this.load.audio("advice","./public/audio/Alerta-loop.mp3");
    this.load.audio("explosion","./public/audio/Explosion.mp3");
    this.load.audio("musica","./public/audio/Game-music.mp3");
   }
