@@ -351,8 +351,8 @@ export default class Game extends Phaser.Scene {
                 otraImagenX = 400;
                 otraImagenY = 205;
             } else if (alertPosition === 'bottom') {
-                alertaX = 480;
-                alertaY = 500;
+                alertaX = 600;
+                alertaY = 440;
                 otraImagenX = 400;
                 otraImagenY = 355;
             }
