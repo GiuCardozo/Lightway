@@ -17,14 +17,14 @@ export default class Game extends Phaser.Scene {
   }
 
   preload() {
-   this.load.image("fondo","../public/assets/fondoNegro.jpg"); //Fondo negro
+   this.load.image("fondo","./public/assets/fondoNegro.jpg"); //Fondo negro
    //Jaula
-   this.load.image("platsuperior","../public/assets/plataformabases.png");
-   this.load.image("platinferior","../public/assets/plataformabases.png");
-   this.load.image("platizquierda","../public/assets/plataformalaterales.png");
-   this.load.image("platderecha","../public/assets/plataformalaterales.png"); 
-   this.load.spritesheet("personaje","../public/assets/Isaac.png", {frameWidth: 32, frameHeight: 32}); //Personaje
-   this.load.spritesheet("aura","../public/assets/PJaura.png", {frameWidth:32, frameHeight: 32}); //aura de max.speed
+   this.load.image("platsuperior","./public/assets/plataformabases.png");
+   this.load.image("platinferior","./public/assets/plataformabases.png");
+   this.load.image("platizquierda","./public/assets/plataformalaterales.png");
+   this.load.image("platderecha","./public/assets/plataformalaterales.png"); 
+   this.load.spritesheet("personaje","./public/assets/Isaac.png", {frameWidth: 32, frameHeight: 32}); //Personaje
+   this.load.spritesheet("aura","./public/assets/PJaura.png", {frameWidth:32, frameHeight: 32}); //aura de max.speed
    this.load.image("enemigo1","./public/assets/Enemigo1.png");
    this.load.image("enemigo2","./public/assets/Enemigo2.png");
    this.load.image("enemigo3","./public/assets/Enemigo3-1.png");
