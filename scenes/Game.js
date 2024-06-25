@@ -394,8 +394,7 @@ export default class Game extends Phaser.Scene {
 
     onLaser(personaje, laser){
       this.healt -= 1;
-      laser.destroy();
-      this.hit.play();
+      laser.body.enable = false;
       
       this.personaje.setTint(0xff0000);
       this.tiempoInmunidad= this.time.now + 500
