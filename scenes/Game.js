@@ -155,12 +155,12 @@ export default class Game extends Phaser.Scene {
     loop: false,
   })
  
-   this.timerText= this.add.text(560,10, `Tiempo: ${this.timer}`, { //Texto de contador de tiempo
+   this.timerText= this.add.text(560,10, `Time: ${this.timer}`, { //Texto de contador de tiempo
     fontSize: "28px",
     fill:"#ffffff",
    })
 
-   this.scoreText= this.add.text(10,10, `Puntos: ${this.score}`, { //Texto de contador de tiempo
+   this.scoreText= this.add.text(10,10, `Score: ${this.score}`, { //Texto de contador de tiempo
     fontSize: "28px",
     fill:"#ffffff",
    })
@@ -249,12 +249,12 @@ export default class Game extends Phaser.Scene {
 
   handlerTimer(){ //contador de tiempo
     this.timer += 1;
-    this.timerText.setText(`Tiempo: ${this.timer}`);
+    this.timerText.setText(`Time: ${this.timer}`);
   }
 
   scoreTimer(){ //contador de puntos
     this.score += 1;
-    this.scoreText.setText(`Puntos: ${this.score}`);
+    this.scoreText.setText(`Score: ${this.score}`);
   }
 
   update() {

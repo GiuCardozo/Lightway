@@ -1,22 +1,18 @@
-export default class Start extends Phaser.Scene {
+export default class Tutorial extends Phaser.Scene {
     constructor(){
-        super("start");
+        super("tutorial");
     }
 Init(data){
 
 }
 
 preload(){
-    this.load.image("Inicio","./public/assets/GameOn.png");
-    this.load.audio("ready","./public/audio/Start-music.mp3");
+    this.load.image("help","./public/assets/Tutorial.png");
 }
 
 
 create(){
-    this.add.image(400, 300, "Inicio");
-
-    this.music = this.sound.add("ready");
-     this.music.play();
+    this.add.image(400,300, "help");
 
     this.time.addEvent({ //Ocultar texto
         delay: 500,
@@ -36,15 +32,14 @@ create(){
         fontSize: "20px",
     });
 
-this.enter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-}
-update(){
-    if(this.enter.isDown) {
-        this.scene.start("tutorial");
-        this.music.stop();
-    }
+    this.enter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 }
 
+update(){
+    if(this.enter.isDown){
+        this.scene.start("main");
+    }
+}
 onVisible() {
     this.helper.setVisible(false);
 }
