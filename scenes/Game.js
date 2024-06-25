@@ -13,6 +13,7 @@ export default class Game extends Phaser.Scene {
     this.score= 0; //Contador de puntos
     this.healt= 3; 
     this.gameOver= false;
+    this.tiempoInmunidad= 0;
   }
 
   preload() {
@@ -25,15 +26,24 @@ export default class Game extends Phaser.Scene {
    this.load.spritesheet("personaje","../public/assets/Isaac.png", {frameWidth: 32, frameHeight: 32}); //Personaje
    this.load.spritesheet("aura","../public/assets/PJaura.png", {frameWidth:32, frameHeight: 32}); //aura de max.speed
    this.load.image("enemigo1","./public/assets/Enemigo1.png");
-   this.load.image("enemigo2","./public/assets/enemigo2_0001.png");
-   this.load.image("enemigo3","./public/assets/enemigo3.png");
+   this.load.image("enemigo2","./public/assets/Enemigo2.png");
+   this.load.image("enemigo3","./public/assets/Enemigo3-1.png");
    this.load.image("destroy","./public/assets/object.png");
+   this.load.image("particles","/public/assets/Particle.png");
    this.load.spritesheet("healt","./public/assets/Vidas.png", {frameWidth:32, frameHeight: 32}); //Vidas
    this.load.spritesheet("alerta","./public/assets/Alerta.png", {frameWidth:32, frameHeight: 32}); //Alerta
    this.load.spritesheet("enemigo4","./public/assets/enemigo4.png", {frameWidth:32, frameHeight: 32}); //Rayo gigante
+   this.load.audio("hit","./public/audio/Hit.mp3");
+   this.load.audio("advice","/public/audio/Alerta-loop.mp3");
+   this.load.audio("explosion","./public/audio/Explosion.mp3");
+   this.load.audio("musica","./public/audio/Game-music.mp3");
   }
 
   create() {
+
+    this.musica= this.sound.add("musica");
+    this.musica.play();
+
     this.anims.create({ //animaciones del personaje
       key:"quieto",
       frames: this.anims.generateFrameNumbers("personaje", {start:16,end:16}),
@@ -82,7 +92,7 @@ export default class Game extends Phaser.Scene {
       key:"alert",
       frames:this.anims.generateFrameNumbers("alerta", {start:0, end: 4}),
       frameRate: 6,
-      repeat: 1
+      repeat: 0
     })
 
     this.anims.create({
@@ -95,8 +105,8 @@ export default class Game extends Phaser.Scene {
 
    this.fondo = this.add.image(400,300, "fondo");
 
-   this.time.addEvent({ //aparicion de proyectiles
-      delay:500,
+    this.spawn= this.time.addEvent({ //aparicion de proyectiles (dificultad 0)
+      delay:2000,
       callback:this.onSecond,
       callbackScope: this,
       loop: true,
@@ -117,11 +127,32 @@ export default class Game extends Phaser.Scene {
     loop: true,
  })
 
-  this.time.addEvent({ //evento aparicion de laser
-    delay: 10000,
+  this.las1= this.time.addEvent({ //evento aparicion de laser (dificultad 1)
+    delay: 15000,
     callback:this.handlerLaser,
     callbackScope: this,
     loop: true,
+  })
+
+  this.time.addEvent({ //Cambio dificultad 1
+    delay: 15000,
+    callback:this.resetEvent,
+    callbackScope:this,
+    loop: false,
+  })
+
+  this.time.addEvent({ //Cambio dificultad 2
+    delay: 60000,
+    callback:this.maxReset,
+    callbackScope:this,
+    loop: false,
+  })
+
+  this.time.addEvent({ //Cambio dificultad 3
+    delay: 120000,
+    callback:this.ultraReset,
+    callbackScope:this,
+    loop: false,
   })
  
    this.timerText= this.add.text(560,10, `Tiempo: ${this.timer}`, { //Texto de contador de tiempo
@@ -148,12 +179,20 @@ export default class Game extends Phaser.Scene {
     this.personaje = this.physics.add.sprite(400,300,"personaje").setScale(1.5);
     this.personaje.setSize(20,20);
     this.personaje.setCollideWorldBounds(true); //Activar colision
-
     this.group = this.add.group({
       key: "healt",
       frame: 0,
       repeat: 2
     });
+
+    this.particles= this.add.particles(0,0,"particles", {
+      speed: {min:30, max:40},
+      lifespan: 2000,
+      scale:{start:0.5, end:0 },
+      quantity: 2,
+      blendMode: 'ADD'
+    }).setVisible(false);
+    this.particles.startFollow(this.personaje);
 
     Phaser.Actions.GridAlign(this.group.getChildren(), { width: 10, cellWidth: 25, cellHeight: 48, x: 50, y: 60 }); //Children del grupo vidas
 
@@ -203,7 +242,7 @@ export default class Game extends Phaser.Scene {
       rndPos[0],
       rndPos[1],
       tipo
-    ).setScale(1.5).setSize(15,13);
+    ).setScale(1.5).setSize(11,11);
     this.physics.moveTo(enemigo, this.personaje.x, this.personaje.y, 150); //Hacer que el enemigo siga la posicion del personaje al iniciarse
     
   }
@@ -250,6 +289,13 @@ export default class Game extends Phaser.Scene {
     } else if(this.m.isDown && this.inputKeys.down.isDown) {
       this.personaje.setVelocityY(1000);
     }
+
+    if(this.m.isDown){
+      this.particles.setVisible(true);
+    } else{
+      this.particles.setVisible(false);
+    }
+
     if(this.healt <= 0) { //Pausar la escena al recibir 3 golpes
       this.gameOver = true;
     }
@@ -259,6 +305,11 @@ export default class Game extends Phaser.Scene {
         score: this.score,
         gameOver: this.gameOver,
       });
+      this.musica.stop();
+    }
+
+    if(this.time.now >= this.tiempoInmunidad) {
+      this.personaje.clearTint();
     }
     }
 
@@ -269,6 +320,11 @@ export default class Game extends Phaser.Scene {
     onImpact(personaje, enemigo) { 
       enemigo.destroy();  //El enemigo se destruye al tocar al jugador
       this.healt -= 1;  //Se resta una vida cuando el jugador toca un enemigo
+      this.hit= this.sound.add("hit");
+      this.hit.play();
+
+      this.personaje.setTint(0xff0000);
+      this.tiempoInmunidad= this.time.now + 500
 
       const hp = this.group.getChildren(); //grupo de vidas
       
@@ -308,14 +364,20 @@ export default class Game extends Phaser.Scene {
               hideOnComplete: true
             });
 
+            this.aviso= this.sound.add("advice")
+            this.aviso.play();
+
             // Después de 3 segundos, oculta la imagen de alerta y muestra el laser
-            this.time.delayedCall(2000, function () {
+            this.time.delayedCall(1500, function () {
               alerta.setVisible(false); // Oculta la imagen de alerta
-              const laser = this.laseres.create(otraImagenX, otraImagenY, "enemigo4").setScale(10);
+              const laser = this.laseres.create(otraImagenX, otraImagenY, "enemigo4").setSize(35,25).setScale(10);
               laser.play({
                 key: "laser",
                 hideOnComplete: true
               }); // Muestra el laser
+
+              this.explosion= this.sound.add("explosion")
+              this.explosion.play();
       
               // Activar collider cuando la animación comienza
               laser.on('animationstart', () => {
@@ -333,6 +395,10 @@ export default class Game extends Phaser.Scene {
     onLaser(personaje, laser){
       this.healt -= 1;
       laser.destroy();
+      this.hit.play();
+      
+      this.personaje.setTint(0xff0000);
+      this.tiempoInmunidad= this.time.now + 500
 
       const hp = this.group.getChildren(); //grupo de vidas
       
@@ -346,4 +412,53 @@ export default class Game extends Phaser.Scene {
           console.log(this.group.getChildren());
     }
     
+    resetEvent() { //dificultad 1
+      this.spawn.remove(false); //remover spawn de la dificultad anterior
+
+      this.dif1= this.time.addEvent({ //aparicion de proyectiles (dificultad 1)
+        delay:1000,
+        callback:this.onSecond,
+        callbackScope: this,
+        loop: true,
+     });
     }
+
+    maxReset() { //dificultad 2
+      this.dif1.remove(false); //remover el spawn de la dificultad anterior
+      this.las1.remove(false); //remover laser de la dificultad anterior
+
+      this.dif2= this.time.addEvent({ //Aparicion proyectiles (dificultad 2)
+        delay: 500,
+        callback:this.onSecond,
+        callbackScope:this,
+        loop: true,
+      });
+
+      this.las2= this.time.addEvent({ //evento aparicion de laser (dificultad 1)
+        delay: 10000,
+        callback:this.handlerLaser,
+        callbackScope: this,
+        loop: true,
+      });
+    }
+
+    ultraReset() {
+      this.dif2.remove(false); //remover el spawn de la dificultad anterior
+      this.las2.remove(false); //remover laser de la dificultad anterior
+
+      this.dif3= this.time.addEvent({ //Aparicion proyectiles (dificultad 3)
+        delay: 300,
+        callback:this.onSecond,
+        callbackScope:this,
+        loop: true,
+      });
+
+      this.las3= this.time.addEvent({ //evento aparicion de laser (dificultad 3)
+        delay: 5000,
+        callback:this.handlerLaser,
+        callbackScope: this,
+        loop: true,
+      });
+    }
+    }
+    
