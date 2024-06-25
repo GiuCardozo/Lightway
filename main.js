@@ -1,6 +1,7 @@
 import Game from "./scenes/Game.js";
 import End from "./scenes/End.js";
 import Start from "./scenes/Start.js";
+import Tutorial from "./scenes/Tutorial.js";
 // Create a new Phaser config object
 const config = {
   type: Phaser.AUTO,
@@ -29,7 +30,7 @@ const config = {
   // List of scenes to load
   // Only the first scene will be shown
   // Remember to import the scene before adding it to the list
-  scene: [Start, Game, End],
+  scene: [Start, Tutorial, Game, End],
 };
 
 // Create a new Phaser game instance
