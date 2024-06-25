@@ -29,7 +29,7 @@ export default class Game extends Phaser.Scene {
    this.load.image("enemigo2","./public/assets/Enemigo2.png");
    this.load.image("enemigo3","./public/assets/Enemigo3-1.png");
    this.load.image("destroy","./public/assets/object.png");
-   this.load.image("particles","/public/assets/Particle.png");
+   this.load.image("particles","./public/assets/Particle.png");
    this.load.spritesheet("healt","./public/assets/Vidas.png", {frameWidth:32, frameHeight: 32}); //Vidas
    this.load.spritesheet("alerta","./public/assets/Alerta.png", {frameWidth:32, frameHeight: 32}); //Alerta
    this.load.spritesheet("enemigo4","./public/assets/enemigo4.png", {frameWidth:32, frameHeight: 32}); //Rayo gigante
